@@ -1,4 +1,5 @@
 import { Branch } from './model.js';
+import { buildPackageSummary } from './package-catalog.js';
 
 const sum = values => Math.round(values.reduce((total, value) => total + Number(value || 0), 0) * 100) / 100;
 
@@ -16,11 +17,14 @@ export function calculateActivity(records, metric) {
   return { sutera, eco, total: sum([sutera, eco]) };
 }
 
-export function summarizePrettySales(records) {
+export function summarizePrettySales(records, packageCatalog = []) {
   const by = (branch, type) => records.filter(row => row.branch === branch && row.sale_type === type);
   const summarize = rows => ({ quantity: sum(rows.map(row => row.quantity)), amount: sum(rows.map(row => row.amount)), records: rows.length });
   return {
-    packages: { sutera: summarize(by(Branch.SUTERA, 'package')), eco: summarize(by(Branch.ECO, 'package')) },
+    packages: {
+      sutera: { ...summarize(by(Branch.SUTERA, 'package')), items: buildPackageSummary(records, packageCatalog, Branch.SUTERA) },
+      eco: { ...summarize(by(Branch.ECO, 'package')), items: buildPackageSummary(records, packageCatalog, Branch.ECO) }
+    },
     products: { sutera: summarize(by(Branch.SUTERA, 'product')), eco: summarize(by(Branch.ECO, 'product')) }
   };
 }
