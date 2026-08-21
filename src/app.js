@@ -6,11 +6,14 @@ import { SectionSettingsRepository } from './repositories/section-settings-repos
 import { dashboardModules } from './modules/module-registry.js';
 import { readPublicSettings, saveTargets, saveSectionSettings } from './services/cloud-settings-service.js';
 import { supabase, requireAdmin } from './services/supabase-service.js';
-import { openPrintDialog } from './services/pdf-export.js';
+import { openBossPrintDialog } from './services/pdf-export.js';
+import { buildBossSummary, exportSectionDefinitions, renderBossSummary } from './services/boss-summary.js';
+import { exportBossImage } from './services/image-export.js';
+import { deactivateDashboardAdmin, inviteDashboardAdmin, listDashboardAdmins, transferDashboardOwner } from './services/admin-management-service.js';
 
 const $ = selector => document.querySelector(selector);
 const targets = new TargetRepository(), sections = new SectionSettingsRepository(dashboardModules);
-const state = { cache: null, selected: null, sectionSettings: sections.load(), settingsSource: 'cache', generatedRange: null };
+const state = { cache: null, selected: null, sectionSettings: sections.load(), settingsSource: 'cache', generatedRange: null, generatedResult: null, exportSelection: exportSectionDefinitions.map(x=>x.id), adminProfile: null };
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
 const dateInMalaysia = (offset = 0) => { const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(Date.now()+offset*86400000)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value])); return `${parts.year}-${parts.month}-${parts.day}`; };
 const today = dateInMalaysia(), monthStart = `${today.slice(0,7)}-01`;
@@ -69,9 +72,25 @@ function renderModule(module,result){const totals=result.totals,sameMonth=result
   else if(module.id==='cuccio'||module.id==='birthday'){const values=totals[module.id];body=`<article class="kpi-card"><h3>${module.id.toUpperCase()}</h3><div class="kpi-values">${['sutera','eco','total'].map(scope=>`<div class="kpi-value ${scope==='total'?'total':''}"><small>${scope}</small><strong>${quantity(values[scope])}</strong></div>`).join('')}</div></article>`;}
   else if(module.id==='dataStatus')body=dataStatusSection(result);
   return `<section class="panel dashboard-section" data-module="${module.id}"><h2>${escapeHtml(module.title)}</h2>${body}</section>`;}
-$('#weekly-form').addEventListener('submit',async event=>{event.preventDefault();const start=$('#weekly-start').value,end=$('#weekly-end').value,button=event.submitter||event.currentTarget.querySelector('button');$('#export-pdf').hidden=true;state.generatedRange=null;if(start>end){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Start Date must be before End Date.';return;}button.disabled=true;$('#weekly-message').className='status-strip neutral';$('#weekly-message').textContent='Loading dashboard data...';try{await loadCloudSettings([...new Set([start.slice(0,7),end.slice(0,7)])]);const result=await new DashboardDataService().syncWeekly(start,end);const modules=dashboardModules.configured(state.sectionSettings,result);$('#weekly-preview').innerHTML=`<div class="preview-shell"><header class="preview-header"><div><p class="eyebrow">PRETTY NAILS SPA</p><h2>Weekly Sales Dashboard</h2><p>Consolidated branch performance</p></div><div class="preview-period">${formatDate(start)} – ${formatDate(end)}</div></header>${modules.map(module=>renderModule(module,result)).join('')}</div>`;$('#raw-data').textContent=JSON.stringify(result,null,2);state.generatedRange={start,end};$('#export-pdf').hidden=false;const failed=result.sources.filter(x=>x.status==='failed');$('#weekly-message').className=`status-strip ${failed.length?'cached':'live'}`;$('#weekly-message').textContent=failed.length?'Some data may be incomplete. See Data Status.':`Updated · Last updated: ${formatTimestamp(new Date())}`;}catch(error){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Unable to sync data.';$('#weekly-preview').innerHTML='<div class="empty-state"><span>!</span><h2>Dashboard unavailable</h2><p>Please retry in a moment.</p></div>';}finally{button.disabled=false;}});
-$('#export-pdf').addEventListener('click',()=>{if(!state.generatedRange)return;openPrintDialog(state.generatedRange);});
-$('#export-pdf').title='For best PDF results: A4 · Landscape · Background graphics ON';
+function renderExportSelection(){
+  $('#export-selection').innerHTML=exportSectionDefinitions.map(item=>`<label class="export-option"><input type="checkbox" value="${item.id}" ${state.exportSelection.includes(item.id)?'checked':''}><span>${item.title}</span></label>`).join('');
+}
+function currentExportSelection(){return [...$('#export-selection').querySelectorAll('input:checked')].map(input=>input.value);}
+function renderCurrentBossSummary(){
+  state.exportSelection=currentExportSelection();
+  if(!state.exportSelection.length)throw new Error('Please select at least one section to export.');
+  const sameMonth=state.generatedRange.start.slice(0,7)===state.generatedRange.end.slice(0,7),target=sameMonth?targets.get(state.generatedRange.start.slice(0,7)):{overall:0,sutera:0,eco:0};
+  const model=buildBossSummary(state.generatedResult,target,state.exportSelection);
+  $('#boss-summary-host').innerHTML=renderBossSummary(model);
+  if(model.partial)$('#export-message').textContent='Some data may be incomplete. Verify the Full Dashboard before sharing.';
+  return $('#boss-summary-host .boss-summary');
+}
+$('#weekly-form').addEventListener('submit',async event=>{event.preventDefault();const start=$('#weekly-start').value,end=$('#weekly-end').value,button=event.submitter||event.currentTarget.querySelector('button');$('#export-panel').hidden=true;state.generatedRange=null;state.generatedResult=null;if(start>end){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Start Date must be before End Date.';return;}button.disabled=true;$('#weekly-message').className='status-strip neutral';$('#weekly-message').textContent='Loading dashboard data...';try{await loadCloudSettings([...new Set([start.slice(0,7),end.slice(0,7)])]);const result=await new DashboardDataService().syncWeekly(start,end);const modules=dashboardModules.configured(state.sectionSettings,result);$('#weekly-preview').innerHTML=`<div class="preview-shell"><header class="preview-header"><div><p class="eyebrow">PRETTY NAILS SPA</p><h2>Weekly Sales Dashboard</h2><p>Consolidated branch performance</p></div><div class="preview-period">${formatDate(start)} – ${formatDate(end)}</div></header>${modules.map(module=>renderModule(module,result)).join('')}</div>`;$('#raw-data').textContent=JSON.stringify(result,null,2);state.generatedRange={start,end};state.generatedResult=result;renderExportSelection();$('#export-panel').hidden=false;const failed=result.sources.filter(x=>x.status==='failed');$('#weekly-message').className=`status-strip ${failed.length?'cached':'live'}`;$('#weekly-message').textContent=failed.length?'Some data may be incomplete. See Data Status.':`Updated · Last updated: ${formatTimestamp(new Date())}`;}catch(error){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Unable to sync data.';$('#weekly-preview').innerHTML='<div class="empty-state"><span>!</span><h2>Dashboard unavailable</h2><p>Please retry in a moment.</p></div>';}finally{button.disabled=false;}});
+$('#export-selection').addEventListener('change',()=>{state.exportSelection=currentExportSelection();$('#export-message').textContent=state.exportSelection.length?'For PDF: A4 · Landscape · Background graphics ON':'Please select at least one section to export.';});
+$('#select-all-export').addEventListener('click',()=>{state.exportSelection=exportSectionDefinitions.map(x=>x.id);renderExportSelection();$('#export-message').textContent='For PDF: A4 · Landscape · Background graphics ON';});
+$('#clear-all-export').addEventListener('click',()=>{state.exportSelection=[];renderExportSelection();$('#export-message').textContent='Please select at least one section to export.';});
+$('#export-image').addEventListener('click',async()=>{const button=$('#export-image');try{button.disabled=true;$('#export-message').textContent='Creating high-resolution image…';const node=renderCurrentBossSummary();const output=await exportBossImage(node,state.generatedRange);$('#export-message').textContent=`Image ready · ${output.width} × ${output.height}px`;}catch(error){$('#export-message').textContent=error.message;}finally{button.disabled=false;}});
+$('#export-pdf').addEventListener('click',()=>{try{renderCurrentBossSummary();openBossPrintDialog(state.generatedRange);}catch(error){$('#export-message').textContent=error.message;}});
 
 function loadTargetForm(){const value=targets.get($('#target-month').value);['overall','sutera','eco'].forEach(scope=>$(`#target-${scope}`).value=value[scope]);$('#target-warning').textContent=targetWarning(value);}
 $('#target-month').addEventListener('change',loadTargetForm); ['overall','sutera','eco'].forEach(scope=>$(`#target-${scope}`).addEventListener('input',()=>$('#target-warning').textContent=targetWarning(Object.fromEntries(['overall','sutera','eco'].map(x=>[x,Number($(`#target-${x}`).value)])))));
@@ -88,12 +107,24 @@ async function loadCloudSettings(months){
     state.settingsSource='cloud'; return true;
   }catch(error){state.settingsSource='cache';$('#auth-message').textContent=`Cloud Settings unavailable; cached settings shown. ${error.message}`;return false;}
 }
+async function loadAdminManagement(){
+  if(state.adminProfile?.dashboardRole!=='owner')return;
+  const result=await listDashboardAdmins();
+  $('#admin-list').innerHTML=(result.admins||[]).map(item=>`<article class="admin-row" data-user-id="${item.user_id}" data-email="${escapeHtml(item.email)}"><div><strong>${escapeHtml(item.email)}</strong><span>${item.role.toUpperCase()} · ${item.active?'ACTIVE':'INACTIVE'}</span></div><div>${item.role==='admin'&&item.active?'<button type="button" data-admin-action="deactivate" class="secondary">Deactivate</button><button type="button" data-admin-action="transfer">Transfer Ownership</button><button type="button" data-admin-action="transfer-deactivate" class="danger-button">Transfer & Deactivate Me</button>':''}</div></article>`).join('');
+}
+$('#invite-admin-form').addEventListener('submit',async event=>{event.preventDefault();const email=$('#invite-admin-email').value.trim();$('#admin-management-message').textContent='Sending secure invitation…';try{const result=await inviteDashboardAdmin(email);$('#invite-admin-email').value='';$('#admin-management-message').textContent=result.invited?'Invitation sent. The new Admin must set their own password.':'Existing account activated as Admin.';await loadAdminManagement();}catch(error){$('#admin-management-message').textContent=error.message;}});
+$('#admin-list').addEventListener('click',async event=>{const action=event.target.dataset.adminAction;if(!action)return;const row=event.target.closest('.admin-row'),targetUserId=row.dataset.userId,email=row.dataset.email;try{
+  if(action==='deactivate'){if(!confirm(`Deactivate Admin ${email}?\n\nThis account will immediately lose Dashboard write permission.`))return;await deactivateDashboardAdmin(targetUserId);$('#admin-management-message').textContent=`${email} is inactive.`;await loadAdminManagement();return;}
+  const deactivateOld=action==='transfer-deactivate',message=`Transfer Owner role to ${email}?\n\nThis user will be able to manage administrators and transfer ownership.${deactivateOld?'\n\nYour Owner access will be removed and your account will be deactivated after the transfer.':'\n\nYour account will remain an active Admin.'}`;
+  if(!confirm(message))return;await transferDashboardOwner(targetUserId,deactivateOld);$('#admin-management-message').textContent='Ownership transferred successfully.';await renderAdminSession();
+ }catch(error){$('#admin-management-message').textContent=error.message;}});
 async function renderAdminSession(){
   const {data:{session}}=await supabase.auth.getSession();
   let admin=false;
-  if(session){try{await requireAdmin();admin=true;}catch(error){$('#admin-status').textContent=error.message;}}
+  if(session){try{state.adminProfile=await requireAdmin();admin=true;}catch(error){state.adminProfile=null;$('#admin-status').textContent=error.message;}}
   $('#admin-settings').hidden=!admin;$('#admin-login-button').hidden=admin;$('#admin-logout-button').hidden=!session;$('#admin-email').disabled=admin;$('#admin-password').disabled=admin;
-  if(admin){$('#admin-status').textContent=`Admin connected: ${session.user.email}`;$('#password-reset-form').hidden=true;}
+  $('#admin-management').hidden=!admin||state.adminProfile?.dashboardRole!=='owner';
+  if(admin){$('#admin-status').textContent=`${state.adminProfile.dashboardRole==='owner'?'Owner':'Admin'} connected: ${session.user.email}`;$('#password-reset-form').hidden=true;if(state.adminProfile.dashboardRole==='owner')await loadAdminManagement();}
 }
 $('#admin-login-form').addEventListener('submit',async event=>{event.preventDefault();$('#admin-status').textContent='Signing in…';const {error}=await supabase.auth.signInWithPassword({email:$('#admin-email').value.trim(),password:$('#admin-password').value});$('#admin-password').value='';if(error){$('#admin-status').textContent='Unable to sign in';return;}$('#password-reset-form').hidden=true;await renderAdminSession();});
 $('#admin-forgot-button').addEventListener('click',async()=>{const email=$('#admin-email').value.trim();if(!email){$('#admin-status').textContent='Enter the Admin email first.';return;}$('#admin-status').textContent='Sending recovery email…';const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${window.location.origin}${window.location.pathname}`});$('#admin-status').textContent=error?'Unable to send password recovery email.':'Password recovery email sent. Open the newest email on this device.';});
