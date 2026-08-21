@@ -11,6 +11,9 @@ export class PrettySalesAdapter {
   async read(start, end) {
     const range = `select=*&record_date=gte.${encodeURIComponent(start)}&record_date=lte.${encodeURIComponent(end)}&order=record_date.asc`;
     const [records, staff, targets] = await Promise.all([this.table('sales_records', range), this.table('staff'), this.table('targets')]);
-    return { records, staff, targets };
+    let packageCatalog = [], packageCatalogError = null;
+    try { packageCatalog = await this.table('package_catalog', 'select=*&order=branch.asc,display_order.asc,package_name.asc'); }
+    catch (error) { packageCatalogError = error.message; }
+    return { records, staff, targets, packageCatalog, packageCatalogError };
   }
 }
