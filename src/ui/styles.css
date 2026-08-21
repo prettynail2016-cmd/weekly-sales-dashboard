@@ -43,6 +43,8 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
   a{color:inherit!important;text-decoration:none!important}
 }
 
+.boss-item-list{display:grid;gap:3px;margin-top:10px}.boss-item-list span{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:3px 0;border-bottom:1px solid rgba(109,32,66,.1);font-size:12px}.boss-item-list b{overflow-wrap:anywhere}.boss-item-list i{font-style:normal;font-weight:800}
+
 @media print{
   body.printing-boss-summary>*:not(main){display:none!important}
   body.printing-boss-summary>main{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
