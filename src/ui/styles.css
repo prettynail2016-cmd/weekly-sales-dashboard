@@ -43,6 +43,71 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
   a{color:inherit!important;text-decoration:none!important}
 }
 
+/* v1.1.3 — Boss export pagination and competition overflow fixes only. */
+.boss-summary-branches{align-items:start}
+.boss-summary-branches>article{align-self:start}
+.boss-stage{display:block!important}
+.boss-stage>header{display:flex!important}
+.boss-rank-category+.boss-rank-category{border-left:0!important;border-top:1px solid #f0e2e8!important}
+.boss-rank-card{overflow:visible}
+.boss-rank-branches{align-items:start}
+.boss-rank-row{grid-template-columns:22px minmax(42px,1fr) 42px minmax(90px,max-content)!important;overflow:visible}
+.boss-rank-row>span:last-child{min-width:90px;white-space:nowrap;overflow:visible;text-overflow:clip;text-align:right}
+.boss-empty{min-height:0;margin:0;padding:5px 8px}
+.boss-summary:not([data-section-count="1"]){padding-top:22px}
+.boss-summary:not([data-section-count="1"]) .boss-header{margin-bottom:10px}
+.boss-summary:not([data-section-count="1"]) .boss-total{min-height:90px}
+.boss-summary:not([data-section-count="1"]) .boss-branches{min-height:78px}
+.boss-summary:not([data-section-count="1"]) .boss-item-list span{padding-block:2.5px}
+.boss-summary.density-compact:not([data-section-count="1"]) .boss-item-list span{padding-block:1.5px}
+
+@page{size:A4 landscape;margin:4mm}
+@media print{
+  body.printing-boss-summary .boss-summary{width:100%!important;min-height:0!important;padding:2mm 3mm 1.5mm!important;overflow:visible!important}
+  body.printing-boss-summary .boss-header{grid-template-columns:27mm 1fr 27mm!important;margin-bottom:1.2mm!important}
+  body.printing-boss-summary .boss-header h1{margin:0 0 .7mm!important;font-size:19pt!important}
+  body.printing-boss-summary .boss-header time{padding:.8mm 4mm!important;font-size:7pt!important}
+  body.printing-boss-summary .boss-brand{top:-.5mm!important;left:.5mm!important}
+  body.printing-boss-summary .boss-brand>strong{font-size:18pt!important}
+  body.printing-boss-summary .boss-grid{gap:1mm!important}
+  body.printing-boss-summary .boss-kpi-row,body.printing-boss-summary .boss-main-layout,body.printing-boss-summary .boss-customer-bar{gap:1mm!important}
+  body.printing-boss-summary .boss-card{padding:1.4mm!important;border-radius:2mm!important;box-shadow:none!important;break-inside:auto!important;page-break-inside:auto!important}
+  body.printing-boss-summary .boss-kpi-row{grid-template-columns:minmax(60mm,1.15fr) minmax(0,2.85fr)!important;break-inside:avoid-page!important}
+  body.printing-boss-summary .boss-total{min-height:15mm!important;padding:1.6mm 3mm!important}
+  body.printing-boss-summary .boss-total strong{font-size:21pt!important}
+  body.printing-boss-summary .boss-target-kpis{padding:.7mm!important;gap:.7mm!important}
+  body.printing-boss-summary .boss-target-kpis article{padding:1mm 1.5mm!important}
+  body.printing-boss-summary .boss-branches{min-height:12mm!important;break-inside:avoid-page!important}
+  body.printing-boss-summary .boss-branches article{padding:1mm 3mm!important}
+  body.printing-boss-summary .boss-branches article strong{font-size:14pt!important}
+  body.printing-boss-summary .boss-main-layout.has-3-items{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.printing-boss-summary .boss-summary-card,body.printing-boss-summary .boss-competition,body.printing-boss-summary .boss-stage,body.printing-boss-summary .boss-rank-category{break-inside:auto!important;page-break-inside:auto!important}
+  body.printing-boss-summary .boss-card h3{margin-bottom:.7mm!important;font-size:7.5pt!important}
+  body.printing-boss-summary .boss-summary-branches{gap:.8mm!important;align-items:start!important}
+  body.printing-boss-summary .boss-summary-branches>article{padding:.7mm 1mm!important;align-self:start!important}
+  body.printing-boss-summary .boss-summary-branches article>header{margin-bottom:.35mm!important}
+  body.printing-boss-summary .boss-item-head{padding:.2mm .45mm!important}
+  body.printing-boss-summary .boss-item-list{gap:0!important;margin-top:0!important}
+  body.printing-boss-summary .boss-item-list span{padding:.25mm .45mm!important;font-size:7pt!important;line-height:1.04!important}
+  body.printing-boss-summary .boss-stages{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.8mm!important;align-items:start!important}
+  body.printing-boss-summary .boss-stage{display:block!important;overflow:visible!important}
+  body.printing-boss-summary .boss-stage>header{display:flex!important;padding:.7mm 1mm!important;font-size:6.2pt!important}
+  body.printing-boss-summary .boss-rank-category{padding:.65mm!important}
+  body.printing-boss-summary .boss-rank-category+.boss-rank-category{border-left:0!important;border-top:1px solid #f0e2e8!important}
+  body.printing-boss-summary .boss-rank-category h4{margin-bottom:.35mm!important}
+  body.printing-boss-summary .boss-rank-branches{gap:.55mm!important;align-items:start!important}
+  body.printing-boss-summary .boss-rank-card{overflow:visible!important;break-inside:avoid-page!important;page-break-inside:avoid!important}
+  body.printing-boss-summary .boss-rank-card h5{padding:.45mm .7mm!important}
+  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.8mm minmax(7mm,1fr) 7mm minmax(18mm,max-content)!important;gap:.35mm!important;padding:.4mm .65mm!important;font-size:6.6pt!important;line-height:1.05!important;overflow:visible!important}
+  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:18mm!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
+  body.printing-boss-summary .boss-medal-slot,body.printing-boss-summary .boss-medal{width:3.5mm!important;height:3.5mm!important;font-size:5.4pt!important}
+  body.printing-boss-summary .boss-empty{margin:0!important;padding:.6mm 1mm!important}
+  body.printing-boss-summary .boss-customer-bar{break-inside:avoid-page!important}
+  body.printing-boss-summary .boss-customer-item{grid-template-columns:23mm 1fr!important;padding:.7mm 1mm!important}
+  body.printing-boss-summary .boss-customer-item span{padding:.7mm!important}
+  body.printing-boss-summary footer{margin-top:.6mm!important}
+}
+
 /* v1.1.2 — wide, adaptive Boss Summary. Presentation only; data remains in the shared model. */
 .boss-stage{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.boss-stage>header{grid-column:1/-1!important}.boss-rank-category{min-width:0}.boss-rank-category+.boss-rank-category{border-top:0!important;border-left:1px solid #f0e2e8!important}
 .boss-data-stack{min-width:0;display:grid;gap:10px;align-items:start}.boss-main-layout:not(.has-competition) .boss-data-stack{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.boss-main-layout.has-competition .boss-data-stack{grid-column:1}.boss-main-layout.has-competition .boss-competition{grid-column:2!important;grid-row:auto!important}.boss-data-stack .boss-summary-card{grid-column:auto!important}.boss-main-layout.has-competition .boss-stages{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}.boss-main-layout.has-competition .boss-rank-row{grid-template-columns:20px minmax(32px,1fr) 34px 66px}.boss-main-layout.has-3-items{grid-template-columns:repeat(2,minmax(0,1fr))!important}.boss-main-layout.has-3-items .boss-data-stack{display:contents}.boss-main-layout.has-3-items .boss-product-list{grid-column:1!important}.boss-main-layout.has-3-items .boss-package-list{grid-column:2!important}.boss-main-layout.has-3-items .boss-competition{grid-column:1/-1!important}.boss-main-layout.has-3-items .boss-rank-row{grid-template-columns:20px minmax(32px,1fr) 34px 66px}
@@ -92,3 +157,47 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
   body.printing-boss-summary .boss-summary-card strong,.boss-customer-card span strong{font-size:14pt!important}
   body.printing-boss-summary footer{margin-top:2mm!important}
 }
+
+/* v1.1.3 final cascade: the legacy print block above must not re-expand exports. */
+.boss-summary-branches{align-items:start!important}.boss-summary-branches>article{align-self:start!important}
+.boss-stage{display:block!important}.boss-stage>header{display:flex!important}
+.boss-rank-category+.boss-rank-category{border-left:0!important;border-top:1px solid #f0e2e8!important}
+.boss-rank-card{overflow:visible!important}.boss-rank-branches{align-items:start!important}
+.boss-rank-row{grid-template-columns:22px minmax(42px,1fr) 42px minmax(90px,max-content)!important;overflow:visible!important}
+.boss-rank-row>span:last-child{min-width:90px;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;text-align:right}
+.boss-empty{min-height:0!important;margin:0!important;padding:5px 8px!important}
+.boss-summary:not([data-section-count="1"]){padding-top:22px}.boss-summary:not([data-section-count="1"]) .boss-header{margin-bottom:10px}
+.boss-summary:not([data-section-count="1"]) .boss-total{min-height:90px}.boss-summary:not([data-section-count="1"]) .boss-branches{min-height:78px}
+.boss-summary:not([data-section-count="1"]) .boss-item-list span{padding-block:2.5px}.boss-summary.density-compact:not([data-section-count="1"]) .boss-item-list span{padding-block:1.5px}
+
+@page{size:A4 landscape;margin:4mm}
+@media print{
+  body.printing-boss-summary .boss-summary{width:100%!important;min-height:0!important;padding:2mm 3mm 1.5mm!important;overflow:visible!important}
+  body.printing-boss-summary .boss-header{grid-template-columns:27mm 1fr 27mm!important;margin-bottom:1.2mm!important}
+  body.printing-boss-summary .boss-header h1{margin:0 0 .7mm!important;font-size:19pt!important}
+  body.printing-boss-summary .boss-header time{padding:.8mm 4mm!important;font-size:7pt!important}
+  body.printing-boss-summary .boss-brand{top:-.5mm!important;left:.5mm!important}.boss-brand>strong{font-size:18pt!important}
+  body.printing-boss-summary .boss-grid,body.printing-boss-summary .boss-kpi-row,body.printing-boss-summary .boss-main-layout,body.printing-boss-summary .boss-customer-bar{gap:1mm!important}
+  body.printing-boss-summary .boss-card{padding:1.4mm!important;border-radius:2mm!important;box-shadow:none!important;break-inside:auto!important;page-break-inside:auto!important}
+  body.printing-boss-summary .boss-kpi-row{grid-template-columns:minmax(60mm,1.15fr) minmax(0,2.85fr)!important;break-inside:avoid-page!important}
+  body.printing-boss-summary .boss-total{min-height:15mm!important;padding:1.6mm 3mm!important}.boss-total strong{font-size:21pt!important}
+  body.printing-boss-summary .boss-target-kpis{padding:.7mm!important;gap:.7mm!important}.boss-target-kpis article{padding:1mm 1.5mm!important}
+  body.printing-boss-summary .boss-branches{min-height:12mm!important;break-inside:avoid-page!important}.boss-branches article{padding:1mm 3mm!important}.boss-branches article strong{font-size:14pt!important}
+  body.printing-boss-summary .boss-main-layout.has-3-items{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.printing-boss-summary .boss-summary-card,body.printing-boss-summary .boss-competition,body.printing-boss-summary .boss-stage,body.printing-boss-summary .boss-rank-category{break-inside:auto!important;page-break-inside:auto!important}
+  body.printing-boss-summary .boss-card h3{margin-bottom:.7mm!important;font-size:7.5pt!important}.boss-summary-branches{gap:.8mm!important}
+  body.printing-boss-summary .boss-summary-branches>article{padding:.7mm 1mm!important}.boss-summary-branches article>header{margin-bottom:.35mm!important}
+  body.printing-boss-summary .boss-item-head{padding:.2mm .45mm!important}.boss-item-list{gap:0!important;margin-top:0!important}.boss-item-list span{padding:.25mm .45mm!important;font-size:7pt!important;line-height:1.04!important}
+  body.printing-boss-summary .boss-stages{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.8mm!important;align-items:start!important}
+  body.printing-boss-summary .boss-stage{display:block!important;overflow:visible!important}.boss-stage>header{padding:.7mm 1mm!important;font-size:6.2pt!important}
+  body.printing-boss-summary .boss-rank-category{padding:.65mm!important}.boss-rank-category h4{margin-bottom:.35mm!important}
+  body.printing-boss-summary .boss-rank-branches{gap:.55mm!important}.boss-rank-card{break-inside:avoid-page!important;page-break-inside:avoid!important}
+  body.printing-boss-summary .boss-rank-card h5{padding:.45mm .7mm!important}
+  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.8mm minmax(7mm,1fr) 7mm minmax(18mm,max-content)!important;gap:.35mm!important;padding:.4mm .65mm!important;font-size:6.6pt!important;line-height:1.05!important}
+  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:18mm!important}
+  body.printing-boss-summary .boss-medal-slot,body.printing-boss-summary .boss-medal{width:3.5mm!important;height:3.5mm!important;font-size:5.4pt!important}
+  body.printing-boss-summary .boss-empty{padding:.6mm 1mm!important}
+  body.printing-boss-summary .boss-customer-bar{break-inside:avoid-page!important}.boss-customer-item{grid-template-columns:23mm 1fr!important;padding:.7mm 1mm!important}.boss-customer-item span{padding:.7mm!important}
+  body.printing-boss-summary footer{margin-top:.6mm!important}
+}
+
