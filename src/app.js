@@ -10,13 +10,14 @@ import { openBossPrintDialog } from './services/pdf-export.js';
 import { buildBossSummary, exportSectionDefinitions, renderBossSummary } from './services/boss-summary.js';
 import { exportBossImage } from './services/image-export.js';
 import { deactivateDashboardAdmin, inviteDashboardAdmin, listDashboardAdmins, transferDashboardOwner } from './services/admin-management-service.js';
+import { latestCompletedDay, malaysiaCalendarDate } from './domain/business-date.js';
 
 const $ = selector => document.querySelector(selector);
 const targets = new TargetRepository(), sections = new SectionSettingsRepository(dashboardModules);
 const state = { cache: null, selected: null, sectionSettings: sections.load(), settingsSource: 'cache', generatedRange: null, generatedResult: null, exportSelection: exportSectionDefinitions.map(x=>x.id), adminProfile: null };
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
-const dateInMalaysia = (offset = 0) => { const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(Date.now()+offset*86400000)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value])); return `${parts.year}-${parts.month}-${parts.day}`; };
-const today = dateInMalaysia(), monthStart = `${today.slice(0,7)}-01`;
+const dateInMalaysia = (offset = 0) => malaysiaCalendarDate(new Date(), offset);
+const today = dateInMalaysia(), completedDay = latestCompletedDay(), monthStart = `${today.slice(0,7)}-01`;
 const formatDate = date => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date(`${date}T00:00:00Z`));
 const formatTimestamp = value => new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}).format(value);
 const metricCards = values => ['sutera','eco','total'].map(key=>`<article class="metric-card ${key==='total'?'total':''}"><small>${key}</small><div class="amount">${money(values[key])}</div></article>`).join('');
@@ -28,21 +29,21 @@ document.querySelectorAll('.nav-button').forEach(button=>button.addEventListener
 
 function selectedRange(preset='month'){
   if(preset==='today') return {start:today,end:today,label:'Today'};
-  if(preset==='yesterday'){const day=dateInMalaysia(-1);return {start:day,end:day,label:'Yesterday'};}
+  if(preset==='yesterday') return {start:completedDay,end:completedDay,label:'Yesterday'};
   return {start:monthStart,end:today,label:'This Month'};
 }
 state.selected=selectedRange();
-$('#today-label').textContent=formatDate(today); $('#mtd-label').textContent=`${formatDate(monthStart)} – ${formatDate(today)}`;
+$('#today-label').textContent=formatDate(completedDay); $('#mtd-label').textContent=`${formatDate(monthStart)} – ${formatDate(today)}`;
 $('#target-month-label').textContent=new Intl.DateTimeFormat('en-GB',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${monthStart}T00:00:00Z`));
 $('#weekly-end').value=today; $('#weekly-start').value=dateInMalaysia(-6); $('#range-start').value=monthStart; $('#range-end').value=today; $('#target-month').value=today.slice(0,7);
 
 function targetWarning(value){ const difference=value.sutera+value.eco-value.overall; if(value.overall===0||value.sutera===0||value.eco===0) return 'Warning: One or more targets are 0 (No Target).'; return Math.abs(difference)>.005?`Branch targets total ${money(value.sutera+value.eco)}, different from Overall Target ${money(value.overall)}.`:''; }
 function renderCompletion(sales){ const target=targets.get(today.slice(0,7)); $('#completion-cards').innerHTML=['overall','sutera','eco'].map(scope=>{const current=scope==='overall'?sales.total:sales[scope], amount=target[scope], percentage=amount>0?current/amount*100:null;return `<article class="completion-card"><div class="completion-head"><small>${scope}</small><span class="completion-value">${money(current)}</span></div>${percentage===null?'<div class="no-target">No Target Set</div>':`<div class="percentage">${percentage.toFixed(2)}%</div><div class="progress" aria-label="${percentage.toFixed(2)} percent"><span style="width:${Math.min(100,Math.max(0,percentage))}%"></span></div><div class="branch-meta"><span>Target</span><strong>${money(amount)}</strong></div>`}</article>`}).join(''); $('#overview-target-warning').textContent=targetWarning(target); }
-function renderOverview(records){ const todaySales=calculateSales(recordsIn(records,today,today)), mtd=calculateSales(recordsIn(records,monthStart,today)), range=calculateSales(recordsIn(records,state.selected.start,state.selected.end)); $('#today-cards').innerHTML=metricCards(todaySales); $('#mtd-cards').innerHTML=metricCards(mtd); $('#range-cards').innerHTML=metricCards(range); $('#range-label').textContent=`${state.selected.label}: ${formatDate(state.selected.start)} – ${formatDate(state.selected.end)}`; renderCompletion(mtd); }
+function renderOverview(records){ const completedSales=calculateSales(recordsIn(records,completedDay,completedDay)), mtd=calculateSales(recordsIn(records,monthStart,today)), range=calculateSales(recordsIn(records,state.selected.start,state.selected.end)); $('#today-cards').innerHTML=metricCards(completedSales); $('#mtd-cards').innerHTML=metricCards(mtd); $('#range-cards').innerHTML=metricCards(range); $('#range-label').textContent=`${state.selected.label}: ${formatDate(state.selected.start)} – ${formatDate(state.selected.end)}`; renderCompletion(mtd); }
 
 async function refreshOverview(){
   const button=$('#refresh-sales'); button.disabled=true;
-  const fetchStart=[monthStart,state.selected.start].sort()[0], fetchEnd=[today,state.selected.end].sort().at(-1);
+  const fetchStart=[monthStart,completedDay,state.selected.start].sort()[0], fetchEnd=[today,state.selected.end].sort().at(-1);
   try{
     const data=await new DashboardDataService().readSales(fetchStart,fetchEnd); state.cache={records:data.records,range:{start:fetchStart,end:fetchEnd},at:new Date()};
     renderOverview(data.records); $('#freshness').className='status-strip live'; $('#freshness').textContent=`Updated · Last updated: ${formatTimestamp(state.cache.at)}`;
