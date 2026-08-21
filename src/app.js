@@ -14,7 +14,7 @@ import { latestCompletedDay, malaysiaCalendarDate } from './domain/business-date
 
 const $ = selector => document.querySelector(selector);
 const targets = new TargetRepository(), sections = new SectionSettingsRepository(dashboardModules);
-const state = { cache: null, selected: null, sectionSettings: sections.load(), settingsSource: 'cache', generatedRange: null, generatedResult: null, exportSelection: exportSectionDefinitions.map(x=>x.id), adminProfile: null };
+const state = { cache: null, selected: null, sectionSettings: sections.load(), settingsSource: 'cache', generatedRange: null, generatedResult: null, exportSelection: exportSectionDefinitions.map(x=>x.id), exportDensity: 'comfortable', adminProfile: null };
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
 const dateInMalaysia = (offset = 0) => malaysiaCalendarDate(new Date(), offset);
 const today = dateInMalaysia(), completedDay = latestCompletedDay(), monthStart = `${today.slice(0,7)}-01`;
@@ -77,21 +77,23 @@ function renderExportSelection(){
   $('#export-selection').innerHTML=exportSectionDefinitions.map(item=>`<label class="export-option"><input type="checkbox" value="${item.id}" ${state.exportSelection.includes(item.id)?'checked':''}><span>${item.title}</span></label>`).join('');
 }
 function currentExportSelection(){return [...$('#export-selection').querySelectorAll('input:checked')].map(input=>input.value);}
-function renderCurrentBossSummary(){
+function renderCurrentBossSummary(density=state.exportDensity){
   state.exportSelection=currentExportSelection();
   if(!state.exportSelection.length)throw new Error('Please select at least one section to export.');
   const sameMonth=state.generatedRange.start.slice(0,7)===state.generatedRange.end.slice(0,7),target=sameMonth?targets.get(state.generatedRange.start.slice(0,7)):{overall:0,sutera:0,eco:0};
   const model=buildBossSummary(state.generatedResult,target,state.exportSelection);
+  model.density=density==='compact'?'compact':'comfortable'; model.compact=model.density==='compact';
   $('#boss-summary-host').innerHTML=renderBossSummary(model);
   if(model.partial)$('#export-message').textContent='Some data may be incomplete. Verify the Full Dashboard before sharing.';
   return $('#boss-summary-host .boss-summary');
 }
 $('#weekly-form').addEventListener('submit',async event=>{event.preventDefault();const start=$('#weekly-start').value,end=$('#weekly-end').value,button=event.submitter||event.currentTarget.querySelector('button');$('#export-panel').hidden=true;state.generatedRange=null;state.generatedResult=null;if(start>end){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Start Date must be before End Date.';return;}button.disabled=true;$('#weekly-message').className='status-strip neutral';$('#weekly-message').textContent='Loading dashboard data...';try{await loadCloudSettings([...new Set([start.slice(0,7),end.slice(0,7)])]);const result=await new DashboardDataService().syncWeekly(start,end);const modules=dashboardModules.configured(state.sectionSettings,result);$('#weekly-preview').innerHTML=`<div class="preview-shell"><header class="preview-header"><div><p class="eyebrow">PRETTY NAILS SPA</p><h2>Weekly Sales Dashboard</h2><p>Consolidated branch performance</p></div><div class="preview-period">${formatDate(start)} – ${formatDate(end)}</div></header>${modules.map(module=>renderModule(module,result)).join('')}</div>`;$('#raw-data').textContent=JSON.stringify(result,null,2);state.generatedRange={start,end};state.generatedResult=result;renderExportSelection();$('#export-panel').hidden=false;const failed=result.sources.filter(x=>x.status==='failed');$('#weekly-message').className=`status-strip ${failed.length?'cached':'live'}`;$('#weekly-message').textContent=failed.length?'Some data may be incomplete. See Data Status.':`Updated · Last updated: ${formatTimestamp(new Date())}`;}catch(error){$('#weekly-message').className='status-strip failed';$('#weekly-message').textContent='Unable to sync data.';$('#weekly-preview').innerHTML='<div class="empty-state"><span>!</span><h2>Dashboard unavailable</h2><p>Please retry in a moment.</p></div>';}finally{button.disabled=false;}});
-$('#export-selection').addEventListener('change',()=>{state.exportSelection=currentExportSelection();$('#export-message').textContent=state.exportSelection.length?'For PDF: A4 · Landscape · Background graphics ON':'Please select at least one section to export.';});
+$('#export-selection').addEventListener('change',()=>{state.exportSelection=currentExportSelection();$('#export-message').textContent=state.exportSelection.length?'PNG uses the selected density. PDF uses Compact · A4 · Landscape · Background graphics ON':'Please select at least one section to export.';});
+document.querySelectorAll('[name="export-density"]').forEach(input=>input.addEventListener('change',()=>{state.exportDensity=input.value;$('#export-message').textContent='PNG uses the selected density. PDF uses Compact · A4 · Landscape · Background graphics ON';}));
 $('#select-all-export').addEventListener('click',()=>{state.exportSelection=exportSectionDefinitions.map(x=>x.id);renderExportSelection();$('#export-message').textContent='For PDF: A4 · Landscape · Background graphics ON';});
 $('#clear-all-export').addEventListener('click',()=>{state.exportSelection=[];renderExportSelection();$('#export-message').textContent='Please select at least one section to export.';});
 $('#export-image').addEventListener('click',async()=>{const button=$('#export-image');try{button.disabled=true;$('#export-message').textContent='Creating high-resolution image…';const node=renderCurrentBossSummary();const output=await exportBossImage(node,state.generatedRange);$('#export-message').textContent=`Image ready · ${output.width} × ${output.height}px`;}catch(error){$('#export-message').textContent=error.message;}finally{button.disabled=false;}});
-$('#export-pdf').addEventListener('click',()=>{try{renderCurrentBossSummary();openBossPrintDialog(state.generatedRange);}catch(error){$('#export-message').textContent=error.message;}});
+$('#export-pdf').addEventListener('click',()=>{try{renderCurrentBossSummary('compact');openBossPrintDialog(state.generatedRange);}catch(error){$('#export-message').textContent=error.message;}});
 
 function loadTargetForm(){const value=targets.get($('#target-month').value);['overall','sutera','eco'].forEach(scope=>$(`#target-${scope}`).value=value[scope]);$('#target-warning').textContent=targetWarning(value);}
 $('#target-month').addEventListener('change',loadTargetForm); ['overall','sutera','eco'].forEach(scope=>$(`#target-${scope}`).addEventListener('input',()=>$('#target-warning').textContent=targetWarning(Object.fromEntries(['overall','sutera','eco'].map(x=>[x,Number($(`#target-${x}`).value)])))));
