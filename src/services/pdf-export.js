@@ -19,3 +19,14 @@ export function openPrintDialog({ start, end, documentRef = document, windowRef 
   windowRef.requestAnimationFrame(() => windowRef.print());
   return filename;
 }
+
+export function openBossPrintDialog({ start, end, documentRef = document, windowRef = window }) {
+  const filename = pdfFilename(start, end).replace('WEEKLY DASHBOARD', 'BOSS SUMMARY');
+  const previousTitle = documentRef.title;
+  documentRef.title = filename.replace(/\.pdf$/i, '');
+  documentRef.body.classList.add('printing-boss-summary');
+  const restore = () => { documentRef.title = previousTitle; documentRef.body.classList.remove('printing-boss-summary'); windowRef.removeEventListener('afterprint', restore); };
+  windowRef.addEventListener('afterprint', restore);
+  windowRef.requestAnimationFrame(() => windowRef.print());
+  return filename;
+}
