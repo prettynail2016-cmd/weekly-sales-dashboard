@@ -21,7 +21,7 @@ export async function syncWeeklyData({ start, end, dailySales, prettySales, acti
       sales: calculateSales(dailyRecords),
       cuccio: calculateActivity(cuccioRecords, 'cuccio'),
       birthday: calculateActivity(birthdayRecords, 'birthday'),
-      prettySales: summarizePrettySales(pretty.data?.records || []),
+      prettySales: summarizePrettySales(pretty.data?.records || [], pretty.data?.packageCatalog || []),
       competition: calculateCompetition(pretty.data?.records || [], start, end)
     },
     validation: validateDailySales(dailyRecords, start, end),
