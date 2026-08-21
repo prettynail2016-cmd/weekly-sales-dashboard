@@ -1,5 +1,6 @@
 import { Branch } from './model.js';
 import { buildPackageSummary } from './package-catalog.js';
+import { buildProductSummary } from './product-normalizer.js';
 
 const sum = values => Math.round(values.reduce((total, value) => total + Number(value || 0), 0) * 100) / 100;
 
@@ -25,7 +26,7 @@ export function summarizePrettySales(records, packageCatalog = []) {
       sutera: { ...summarize(by(Branch.SUTERA, 'package')), items: buildPackageSummary(records, packageCatalog, Branch.SUTERA) },
       eco: { ...summarize(by(Branch.ECO, 'package')), items: buildPackageSummary(records, packageCatalog, Branch.ECO) }
     },
-    products: { sutera: summarize(by(Branch.SUTERA, 'product')), eco: summarize(by(Branch.ECO, 'product')) }
+    products: { sutera: buildProductSummary(records, Branch.SUTERA), eco: buildProductSummary(records, Branch.ECO) }
   };
 }
 
@@ -56,9 +57,27 @@ export function competitionWindows(start, end) {
   return windows;
 }
 
-export function calculateCompetition(records, start, end) {
+const metricValue = (row, metric) => ['amount', 'amount_quantity'].includes(metric)
+  ? Math.round(row.amount * 100) / 100
+  : Math.round(row.quantity * 10000) / 10000;
+
+export function denseRank(rows, metric = 'amount') {
+  let rank = 0, previous;
+  return [...rows].sort((a, b) => metricValue(b, metric) - metricValue(a, metric) || a.staff.localeCompare(b.staff))
+    .map((item, index) => {
+      const value = metricValue(item, metric), firstInRank = index === 0 || value !== previous;
+      if (firstInRank) rank += 1;
+      previous = value;
+      return { rank, firstInRank, ...item };
+    });
+}
+
+export function calculateCompetition(records, start, end, competitions = []) {
   return competitionWindows(start, end).flatMap(window => [Branch.SUTERA, Branch.ECO].flatMap(branch => ['package', 'product'].map(saleType => {
     const rows = records.filter(row => row.record_date >= window.rangeStart && row.record_date <= window.rangeEnd && row.branch === branch && row.sale_type === saleType);
+    const competitionId = rows.find(row => row.competition_id)?.competition_id || saleType;
+    const definition = competitions.find(item => item.id === competitionId || item.competition_id === competitionId) || {};
+    const metricType = definition.metric_type || 'amount';
     const staffRows = rows.filter(row => !row.company_sale), counterRows = rows.filter(row => row.company_sale);
     const ranking = new Map();
     for (const row of staffRows) {
@@ -70,9 +89,9 @@ export function calculateCompetition(records, start, end) {
         ranking.set(code, current);
       }
     }
-    const ranked = [...ranking.values()].map(item => ({ ...item, quantity: sum([item.quantity]), amount: sum([item.amount]) })).sort((a, b) => b.amount - a.amount || a.staff.localeCompare(b.staff)).map((item, index) => ({ rank: index + 1, ...item }));
+    const ranked = denseRank([...ranking.values()].map(item => ({ ...item, quantity: sum([item.quantity]), amount: sum([item.amount]) })), metricType);
     return {
-      ...window, branch, saleType,
+      ...window, branch, saleType, competitionId, metricType, competitionName: definition.display_name || definition.name || saleType,
       result: { quantity: sum(staffRows.map(row => row.quantity)), amount: sum(staffRows.map(row => row.amount)), records: staffRows.length },
       counter: { quantity: sum(counterRows.map(row => row.quantity)), amount: sum(counterRows.map(row => row.amount)), records: counterRows.length },
       ranking: ranked
