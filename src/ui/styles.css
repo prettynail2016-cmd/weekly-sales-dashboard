@@ -316,8 +316,11 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
 /* FINAL EXPORT LAYOUT — PDF breathing room, adaptive orientation, PNG landscape-first. */
 @media print{
   body.printing-boss-summary .boss-item-head,body.printing-boss-summary .boss-item-list span{column-gap:1.35mm!important}
-  body.printing-boss-summary .boss-package-list .boss-item-head,body.printing-boss-summary .boss-package-list .boss-item-list.with-amount span{column-gap:1.15mm!important}
+  body.printing-boss-summary .boss-package-list .boss-item-head,body.printing-boss-summary .boss-package-list .boss-item-list.with-amount span{width:100%!important;grid-template-columns:minmax(0,1fr) 6mm 24mm!important;column-gap:1.15mm!important}
+  body.printing-boss-summary .boss-package-list .boss-item-head>*:last-child,body.printing-boss-summary .boss-package-list .boss-item-list.with-amount span>*:last-child{padding-right:1mm!important;text-align:right!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
+  body.printing-boss-summary .boss-rank-row{width:100%!important;grid-template-columns:3.6mm minmax(0,1fr) 6.5mm 24mm!important}
   body.printing-boss-summary .boss-rank-row{gap:.85mm!important}
+  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:0!important;padding-right:1mm!important;text-align:right!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
   body.printing-boss-portrait .boss-summary{width:100%!important;max-width:100%!important}
   body.printing-boss-portrait .boss-header h1{font-size:24pt!important}
   body.printing-boss-portrait .boss-total{min-height:35mm!important;padding:5mm!important}
