@@ -295,8 +295,19 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
 @page{size:A4 landscape;margin:5mm}
 @media print{
   body.printing-boss-summary .boss-summary{width:100%!important;max-width:100%!important;min-width:0!important;zoom:var(--boss-print-scale,.96);overflow:visible!important}
-  body.printing-boss-summary .boss-item-list span{padding:.22mm .35mm!important;font-size:7.4pt!important;line-height:1.04!important}
+  body.printing-boss-summary .boss-item-head,body.printing-boss-summary .boss-item-list span{justify-content:start!important;column-gap:1mm!important}
+  body.printing-boss-summary .boss-product-list .boss-item-head,body.printing-boss-summary .boss-product-list .boss-item-list span{grid-template-columns:minmax(0,56mm) 7mm!important}
+  body.printing-boss-summary .boss-package-list .boss-item-head,body.printing-boss-summary .boss-package-list .boss-item-list.with-amount span{grid-template-columns:minmax(0,37mm) 6mm 20mm!important}
+  body.printing-boss-summary .boss-item-list span{padding:.28mm .35mm!important;font-size:8.3pt!important;line-height:1.08!important}
+  body.printing-boss-summary .boss-item-head{font-size:6.4pt!important}
   body.printing-boss-summary .boss-stage>header{padding:.5mm .7mm!important}
-  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.6mm minmax(7mm,1fr) 6.5mm minmax(21mm,max-content)!important;padding:.32mm .45mm!important;font-size:7pt!important;line-height:1.06!important;overflow:visible!important}
+  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.6mm minmax(10mm,18mm) 6.5mm minmax(21mm,max-content)!important;justify-content:start!important;gap:.55mm!important;padding:.38mm .45mm!important;font-size:7.8pt!important;line-height:1.08!important;overflow:visible!important}
   body.printing-boss-summary .boss-rank-row>span:last-child{min-width:21mm!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;text-align:right!important}
+  body.printing-boss-summary .boss-card h3{font-size:8.5pt!important}
+  body.printing-boss-summary .boss-rank-category h4{font-size:6.4pt!important}
+  body.printing-boss-summary .boss-rank-card h5{font-size:6.3pt!important}
+  body.printing-boss-summary .boss-customer-item{min-height:9mm!important;padding:.8mm 1mm!important}
+  body.printing-boss-summary .boss-customer-item h3{font-size:7.8pt!important}
+  body.printing-boss-summary .boss-customer-item span{padding:.7mm!important;font-size:6.8pt!important}
+  body.printing-boss-summary .boss-customer-item span strong{font-size:11.5pt!important}
 }
