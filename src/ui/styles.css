@@ -109,10 +109,10 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
 }
 
 /* v1.1.4 — final PDF-only fit and pagination layer. PNG layouts are unchanged. */
-@page{size:A4 landscape;margin:3mm}
+@page{size:A4 landscape;margin:5mm}
 @media print{
   body.printing-boss-summary #boss-summary-host{width:100%!important;overflow:visible!important}
-  body.printing-boss-summary .boss-summary{width:var(--boss-print-width,100%)!important;zoom:var(--boss-print-scale,1);padding:1.2mm 1.8mm .8mm!important;overflow:visible!important}
+  body.printing-boss-summary .boss-summary{width:100%!important;max-width:100%!important;min-width:0!important;zoom:var(--boss-print-scale,.96);padding:1.2mm 1.8mm .8mm!important;overflow:visible!important}
   body.printing-boss-summary .boss-header{margin-bottom:.65mm!important;grid-template-columns:24mm 1fr 24mm!important}
   body.printing-boss-summary .boss-header h1{margin:0 0 .35mm!important;font-size:18pt!important;line-height:.96!important}
   body.printing-boss-summary .boss-header time{padding:.45mm 3.5mm!important}
@@ -134,17 +134,17 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
   body.printing-boss-summary .boss-summary-branches>article{align-self:start!important;padding:.4mm .7mm!important}
   body.printing-boss-summary .boss-summary-branches article>header{margin-bottom:.15mm!important}
   body.printing-boss-summary .boss-item-head{padding:.1mm .35mm!important}
-  body.printing-boss-summary .boss-item-list span{padding:.12mm .35mm!important;line-height:1!important}
+  body.printing-boss-summary .boss-item-list span{padding:.22mm .35mm!important;font-size:7.4pt!important;line-height:1.04!important}
   body.printing-boss-summary .boss-stages{gap:.45mm!important;align-items:start!important}
   body.printing-boss-summary .boss-stage{overflow:visible!important}
-  body.printing-boss-summary .boss-stage>header{padding:.4mm .7mm!important;break-after:auto!important}
+  body.printing-boss-summary .boss-stage>header{padding:.5mm .7mm!important;break-after:auto!important}
   body.printing-boss-summary .boss-rank-category{padding:.35mm!important}
   body.printing-boss-summary .boss-rank-category h4{margin-bottom:.15mm!important}
   body.printing-boss-summary .boss-rank-branches{gap:.3mm!important;align-items:start!important}
   body.printing-boss-summary .boss-rank-card{overflow:visible!important;break-inside:auto!important;page-break-inside:auto!important}
   body.printing-boss-summary .boss-rank-card h5{padding:.25mm .5mm!important}
-  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.6mm minmax(7mm,1fr) 6.5mm minmax(20mm,max-content)!important;gap:.25mm!important;padding:.22mm .45mm!important;break-inside:avoid-page!important;page-break-inside:avoid!important;overflow:visible!important}
-  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:20mm!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;text-align:right!important}
+  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.6mm minmax(7mm,1fr) 6.5mm minmax(21mm,max-content)!important;gap:.25mm!important;padding:.32mm .45mm!important;font-size:7pt!important;line-height:1.06!important;break-inside:avoid-page!important;page-break-inside:avoid!important;overflow:visible!important}
+  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:21mm!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;text-align:right!important}
   body.printing-boss-summary .boss-medal-slot,body.printing-boss-summary .boss-medal{width:3.2mm!important;height:3.2mm!important}
   body.printing-boss-summary .boss-empty{min-height:0!important;padding:.3mm .6mm!important}
   body.printing-boss-summary .boss-customer-bar{break-inside:avoid-page!important}
@@ -289,4 +289,14 @@ main{width:min(1200px,calc(100% - 40px));margin:0 auto;padding:24px 0 56px}.page
   body.printing-boss-summary .boss-customer-item{grid-template-columns:21mm 1fr!important;padding:.35mm .6mm!important}
   body.printing-boss-summary .boss-customer-item span{padding:.35mm!important}
   body.printing-boss-summary footer{margin-top:.25mm!important}
+}
+
+/* v1.1.4 PRINT FIT FIX FINAL — safe printable width and readable vertical fill. */
+@page{size:A4 landscape;margin:5mm}
+@media print{
+  body.printing-boss-summary .boss-summary{width:100%!important;max-width:100%!important;min-width:0!important;zoom:var(--boss-print-scale,.96);overflow:visible!important}
+  body.printing-boss-summary .boss-item-list span{padding:.22mm .35mm!important;font-size:7.4pt!important;line-height:1.04!important}
+  body.printing-boss-summary .boss-stage>header{padding:.5mm .7mm!important}
+  body.printing-boss-summary .boss-rank-row{grid-template-columns:3.6mm minmax(7mm,1fr) 6.5mm minmax(21mm,max-content)!important;padding:.32mm .45mm!important;font-size:7pt!important;line-height:1.06!important;overflow:visible!important}
+  body.printing-boss-summary .boss-rank-row>span:last-child{min-width:21mm!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;text-align:right!important}
 }
