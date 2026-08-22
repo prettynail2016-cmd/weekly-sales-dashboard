@@ -23,9 +23,24 @@ export function openPrintDialog({ start, end, documentRef = document, windowRef 
 export function openBossPrintDialog({ start, end, documentRef = document, windowRef = window }) {
   const filename = pdfFilename(start, end).replace('WEEKLY DASHBOARD', 'BOSS SUMMARY');
   const previousTitle = documentRef.title;
+  const summary = documentRef.querySelector?.('.boss-summary');
+  if (summary) {
+    const printableAspect = 202 / 289; // A4 landscape after the 4 mm page margins.
+    const availableHeightAtCurrentWidth = summary.scrollWidth * printableAspect;
+    const rawScale = summary.scrollHeight > 0 ? availableHeightAtCurrentWidth / summary.scrollHeight : 1;
+    const scale = Math.max(0.82, Math.min(1, rawScale * 0.985));
+    summary.style.setProperty('--boss-print-scale', scale.toFixed(4));
+    summary.style.setProperty('--boss-print-width', `${(100 / scale).toFixed(3)}%`);
+  }
   documentRef.title = filename.replace(/\.pdf$/i, '');
   documentRef.body.classList.add('printing-boss-summary');
-  const restore = () => { documentRef.title = previousTitle; documentRef.body.classList.remove('printing-boss-summary'); windowRef.removeEventListener('afterprint', restore); };
+  const restore = () => {
+    documentRef.title = previousTitle;
+    documentRef.body.classList.remove('printing-boss-summary');
+    summary?.style.removeProperty('--boss-print-scale');
+    summary?.style.removeProperty('--boss-print-width');
+    windowRef.removeEventListener('afterprint', restore);
+  };
   windowRef.addEventListener('afterprint', restore);
   windowRef.requestAnimationFrame(() => windowRef.print());
   return filename;
