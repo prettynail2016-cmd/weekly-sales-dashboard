@@ -35,9 +35,12 @@ export function openBossPrintDialog({ start, end, documentRef = document, window
     const printableHeight = 200 * cssPixelsPerMm;
     const widthFit = printableWidth / Math.max(summary.scrollWidth, 1);
     const heightFit = printableHeight / Math.max(summary.scrollHeight, 1);
-    const scale = Math.max(0.1, Math.min(1, widthFit * 0.975, heightFit * 0.965));
+    const printLayoutReady = summary.scrollWidth <= printableWidth * 1.08;
+    const scale = printLayoutReady
+      ? Math.max(0.1, Math.min(1, widthFit * 0.975, heightFit * 0.965))
+      : 0.96;
     summary.style.setProperty('--boss-print-scale', scale.toFixed(4));
-    summary.dataset.printFit = JSON.stringify({ widthFit, heightFit, scale });
+    summary.dataset.printFit = JSON.stringify({ widthFit, heightFit, scale, printLayoutReady, contentWidth: summary.scrollWidth, contentHeight: summary.scrollHeight });
   };
   const restore = () => {
     documentRef.title = previousTitle;
